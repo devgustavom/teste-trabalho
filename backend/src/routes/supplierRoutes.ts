@@ -15,41 +15,6 @@ const router = Router();
 /**
  * @swagger
  * /suppliers:
- *   get:
- *     summary: Lista todos os fornecedores
- *     tags: [Suppliers]
- *     security: [ { bearerAuth: [] } ]
- *     responses:
- *       200:
- *         description: Lista de fornecedores
- */
-router.use(authenticateJWT);
-router.get("/", authorizeRoles("admin", "supplier"), wrapAsync(SupplierController.list));
-
-/**
- * @swagger
- * /suppliers/{id}:
- *   get:
- *     summary: Detalhes de um fornecedor
- *     tags: [Suppliers]
- *     security: [ { bearerAuth: [] } ]
- *     parameters:
- *       - in: path
- *         name: id
- *         schema:
- *           type: integer
- *         required: true
- *     responses:
- *       200:
- *         description: Fornecedor encontrado
- *       404:
- *         description: Fornecedor não encontrado
- */
-router.get("/:id", authorizeRoles("admin", "supplier"), wrapAsync(SupplierController.get));
-
-/**
- * @swagger
- * /suppliers:
  *   post:
  *     summary: Cria um fornecedor (apenas admin)
  *     tags: [Suppliers]
@@ -85,7 +50,42 @@ router.get("/:id", authorizeRoles("admin", "supplier"), wrapAsync(SupplierContro
  *       400:
  *         description: Dados inválidos
  */
+router.use(authenticateJWT);
 router.post("/", authorizeRoles("admin"), wrapAsync(SupplierController.create));
+
+/**
+ * @swagger
+ * /suppliers:
+ *   get:
+ *     summary: Lista todos os fornecedores
+ *     tags: [Suppliers]
+ *     security: [ { bearerAuth: [] } ]
+ *     responses:
+ *       200:
+ *         description: Lista de fornecedores
+ */
+router.get("/", wrapAsync(SupplierController.list));
+
+/**
+ * @swagger
+ * /suppliers/{id}:
+ *   get:
+ *     summary: Detalhes de um fornecedor
+ *     tags: [Suppliers]
+ *     security: [ { bearerAuth: [] } ]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         schema:
+ *           type: integer
+ *         required: true
+ *     responses:
+ *       200:
+ *         description: Fornecedor encontrado
+ *       404:
+ *         description: Fornecedor não encontrado
+ */
+router.get("/:id", wrapAsync(SupplierController.get));
 
 /**
  * @swagger

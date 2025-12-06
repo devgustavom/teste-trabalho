@@ -134,15 +134,63 @@ export function ProductsPage() {
   });
 
   const handleAddProduct = () => {
-    // Obter supplier_id do contexto (assumindo que existe)
-    const supplierId = 1; // TODO: Obter do contexto de autenticação
+    // Validar campos obrigatórios
+    if (!newProduct.name || !newProduct.category_id || !newProduct.price) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Preencha nome, categoria e preço",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    createProductMutation.mutate({
-      supplier_id: supplierId,
-      ...newProduct,
-      price: parseFloat(newProduct.price),
-      stock: parseInt(newProduct.stock) || 0,
-    });
+    // Obter supplier_id do localStorage
+    const userStr = localStorage.getItem("user");
+    if (!userStr) {
+      toast({
+        title: "Erro de autenticação",
+        description: "Você precisa estar logado. Faça login novamente.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const userData = JSON.parse(userStr);
+      
+      // Verificar se tem supplier_id
+      if (!userData.supplier_id) {
+        toast({
+          title: "Erro de configuração",
+          description: "Nenhum fornecedor associado à sua conta. Faça login novamente.",
+          variant: "destructive",
+        });
+        // Limpar localStorage e forçar novo login
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+        window.location.href = "/";
+        return;
+      }
+
+      console.log("📦 Criando produto para supplier_id:", userData.supplier_id);
+
+      createProductMutation.mutate({
+        supplier_id: Number(userData.supplier_id),
+        category_id: Number(newProduct.category_id),
+        name: newProduct.name,
+        description: newProduct.description,
+        price: parseFloat(newProduct.price),
+        stock: parseInt(newProduct.stock) || 0,
+        image_url: newProduct.image_url,
+      });
+    } catch (error: any) {
+      console.error("Erro ao processar supplier_id:", error);
+      toast({
+        title: "Erro",
+        description: "Erro ao processar informações de autenticação",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleEditProduct = (product: any) => {
@@ -161,12 +209,25 @@ export function ProductsPage() {
   const handleUpdateProduct = () => {
     if (!editingProduct) return;
 
+    // Validar campos obrigatórios
+    if (!newProduct.name || !newProduct.category_id || !newProduct.price) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Preencha nome, categoria e preço",
+        variant: "destructive",
+      });
+      return;
+    }
+
     updateProductMutation.mutate({
       id: editingProduct.id,
       data: {
-        ...newProduct,
+        category_id: Number(newProduct.category_id),
+        name: newProduct.name,
+        description: newProduct.description,
         price: parseFloat(newProduct.price),
         stock: parseInt(newProduct.stock) || 0,
+        image_url: newProduct.image_url,
       },
     });
   };

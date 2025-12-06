@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search } from "lucide-react";
-import { suppliersApi, campaignsApi, filesApi } from "@/lib/api";
+import { suppliersApi, campaignsApi } from "@/lib/api";
 
 export function SuppliersByCategoryPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -24,17 +24,10 @@ export function SuppliersByCategoryPage() {
     queryFn: () => campaignsApi.list(),
   });
 
-  // Buscar arquivos (para verificar se fornecedor tem arquivos)
-  const { data: allFiles = [] } = useQuery({
-    queryKey: ["files"],
-    queryFn: () => filesApi.list(),
-  });
-
   // Processar fornecedores
   const processedSuppliers = useMemo(() => {
     return suppliers.map((supplier: any) => {
       const supplierCampaigns = campaigns.filter((c: any) => c.supplier?.id === supplier.id);
-      const supplierFiles = allFiles.filter((f: any) => f.supplier?.id === supplier.id);
       
       return {
         id: supplier.id.toString(),
@@ -43,10 +36,9 @@ export function SuppliersByCategoryPage() {
         contactPhone: supplier.contact_phone,
         whatsappNumber: supplier.whatsapp_link?.replace("https://wa.me/", "") || supplier.contact_phone,
         activeCampaigns: supplierCampaigns.length,
-        hasFiles: supplierFiles.length > 0,
       };
     });
-  }, [suppliers, campaigns, allFiles]);
+  }, [suppliers, campaigns]);
 
   // Obter categorias únicas
   const categories = useMemo(() => {

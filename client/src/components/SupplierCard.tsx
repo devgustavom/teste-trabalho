@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Building2, Phone, MessageCircle, FileText, ArrowRight } from "lucide-react";
+import { Building2, Phone, MessageCircle, ArrowRight } from "lucide-react";
 
 interface SupplierCardProps {
   id: string;
@@ -11,7 +11,6 @@ interface SupplierCardProps {
   contactPhone?: string;
   whatsappNumber?: string;
   activeCampaigns: number;
-  hasFiles: boolean;
   onClick?: () => void;
 }
 
@@ -23,7 +22,6 @@ export function SupplierCard({
   contactPhone,
   whatsappNumber,
   activeCampaigns,
-  hasFiles,
   onClick,
 }: SupplierCardProps) {
   const handleWhatsApp = (e: React.MouseEvent) => {
@@ -57,12 +55,6 @@ export function SupplierCard({
               {activeCampaigns > 0 && (
                 <Badge variant="secondary" className="text-xs">
                   {activeCampaigns} campanha{activeCampaigns > 1 ? "s" : ""} ativa{activeCampaigns > 1 ? "s" : ""}
-                </Badge>
-              )}
-              {hasFiles && (
-                <Badge variant="outline" className="text-xs gap-1">
-                  <FileText className="h-3 w-3" />
-                  Arquivos
                 </Badge>
               )}
             </div>

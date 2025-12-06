@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste API Fornecedores</title>
+    <style>
+        body { font-family: Arial; margin: 20px; background: #f9f9f9; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .result { margin-top: 20px; padding: 15px; border: 1px solid #ddd; background: #f5f5f5; border-radius: 4px; }
+        .result.success { border-color: #4CAF50; background: #e8f5e9; }
+        .result.error { border-color: #f44336; background: #ffebee; }
+        pre { overflow-x: auto; font-size: 12px; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; background: #2196F3; color: white; border: none; border-radius: 4px; }
+        button:hover { background: #0b7dda; }
+        h1 { color: #333; }
+        h3 { margin-top: 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Teste API Fornecedores</h1>
+        <button onclick="testLogin()">🔐 Fazer Login</button>
+        <button onclick="testSuppliers()">📋 Listar Fornecedores</button>
+        <div id="result"></div>
+    </div>
+
+    <script>
+        let token = null;
+
+        async function testLogin() {
+            try {
+                console.log('🔐 Iniciando login...');
+                const response = await fetch('http://localhost:3333/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email: 'admin@sistema.com',
+                        password: 'admin123'
+                    })
+                });
+                
+                console.log('Status:', response.status);
+                const text = await response.text();
+                console.log('Response text:', text);
+                
+                const data = JSON.parse(text);
+                token = data.token;
+                
+                document.getElementById('result').className = 'result success';
+                document.getElementById('result').innerHTML = `
+                    <h3>✅ Login bem-sucedido!</h3>
+                    <p><strong>Email:</strong> ${data.email}</p>
+                    <p><strong>Role:</strong> ${data.role}</p>
+                    <p><strong>Token (primeiros 50 caracteres):</strong></p>
+                    <pre>${token.substring(0, 50)}...</pre>
+                    <p><strong>Resposta completa:</strong></p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                console.error('Erro:', error);
+                document.getElementById('result').className = 'result error';
+                document.getElementById('result').innerHTML = `<h3>❌ Erro: ${error.message}</h3><pre>${error.stack}</pre>`;
+            }
+        }
+
+        async function testSuppliers() {
+            if (!token) {
+                alert('⚠️  Faça login primeiro!');
+                return;
+            }
+
+            try {
+                console.log('📋 Buscando fornecedores...');
+                const response = await fetch('http://localhost:3333/api/suppliers', {
+                    method: 'GET',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                console.log('Status:', response.status);
+                const data = await response.json();
+                console.log('Dados:', data);
+                
+                document.getElementById('result').className = 'result success';
+                document.getElementById('result').innerHTML = `
+                    <h3>✅ Fornecedores obtidos (${Array.isArray(data) ? data.length : 0} total)</h3>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                console.error('Erro:', error);
+                document.getElementById('result').className = 'result error';
+                document.getElementById('result').innerHTML = `<h3>❌ Erro: ${error.message}</h3><pre>${error.stack}</pre>`;
+            }
+        }
+    </script>
+</body>
+</html>

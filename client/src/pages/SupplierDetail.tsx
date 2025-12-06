@@ -10,18 +10,16 @@ import { CampaignBanner } from "@/components/CampaignBanner";
 import { ProductCard } from "@/components/ProductCard";
 import { OrderTotalizer } from "@/components/OrderTotalizer";
 import { OrderConfirmModal } from "@/components/OrderConfirmModal";
-import { FileUploader } from "@/components/FileUploader";
 import { 
   ArrowLeft, 
   Building2, 
   Phone, 
   Mail, 
-  MessageCircle, 
-  FileText,
+  MessageCircle,
   MapPin,
   ShoppingCart
 } from "lucide-react";
-import { suppliersApi, productsApi, campaignsApi, filesApi, ordersApi, stateConditionsApi } from "@/lib/api";
+import { suppliersApi, productsApi, campaignsApi, ordersApi, stateConditionsApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
 interface CartItem {
@@ -45,6 +43,8 @@ export function SupplierDetail() {
     queryKey: ["suppliers", supplierId],
     queryFn: () => suppliersApi.get(supplierId!),
     enabled: !!supplierId,
+    staleTime: 1000 * 60 * 5, // 5 minutos
+    gcTime: 1000 * 60 * 30, // 30 minutos (antes era cacheTime)
   });
 
   // Buscar produtos do fornecedor
@@ -52,6 +52,8 @@ export function SupplierDetail() {
     queryKey: ["products", "supplier", supplierId],
     queryFn: () => productsApi.list(supplierId),
     enabled: !!supplierId,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
   });
 
   // Buscar campanhas do fornecedor
@@ -59,13 +61,8 @@ export function SupplierDetail() {
     queryKey: ["campaigns", "supplier", supplierId],
     queryFn: () => campaignsApi.list(supplierId),
     enabled: !!supplierId,
-  });
-
-  // Buscar arquivos do fornecedor
-  const { data: files = [] } = useQuery({
-    queryKey: ["files", "supplier", supplierId],
-    queryFn: () => filesApi.list(supplierId),
-    enabled: !!supplierId,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
   });
 
   // Buscar condições regionais (para calcular cashback)
@@ -73,6 +70,8 @@ export function SupplierDetail() {
     queryKey: ["state-conditions", "supplier", supplierId],
     queryFn: () => stateConditionsApi.list(supplierId),
     enabled: !!supplierId,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
   });
 
   // Processar produtos
@@ -112,17 +111,6 @@ export function SupplierDetail() {
         imageUrl: campaign.banner_url,
       }));
   }, [campaigns, supplier]);
-
-  // Processar arquivos
-  const processedFiles = useMemo(() => {
-    return files.map((file: any) => ({
-      id: file.id.toString(),
-      name: file.description || `Arquivo ${file.id}`,
-      type: file.file_type === "pdf" ? "pdf" as const : file.file_type === "xls" || file.file_type === "xlsx" ? "spreadsheet" as const : "image" as const,
-      size: "N/A",
-      uploadedAt: new Date(file.created_at).toLocaleDateString("pt-BR"),
-    }));
-  }, [files]);
 
   // Calcular cashback (assumindo estado da loja - seria obtido do contexto)
   const cashbackPercent = useMemo(() => {
@@ -182,10 +170,44 @@ export function SupplierDetail() {
   };
 
   const handleConfirmOrder = (data: { paymentType: string; isBudget: boolean; notes?: string }) => {
-    if (!supplierId) return;
+    console.log("🔍 handleConfirmOrder iniciado");
+    console.log("📍 supplierId:", supplierId);
+    console.log("📍 supplier data:", supplier);
+    
+    if (!supplierId) {
+      console.error("❌ supplierId é null ou undefined");
+      toast({
+        title: "Erro",
+        description: "Fornecedor não identificado.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    // Obter store_id do contexto/estado (assumindo que existe)
-    const storeId = 1; // TODO: Obter do contexto de autenticação
+    // Obter store_id do localStorage
+    const userStr = localStorage.getItem("user");
+    let storeId: number | null = null;
+    
+    if (userStr) {
+      try {
+        const user = JSON.parse(userStr);
+        console.log("📋 Usuário do localStorage:", user);
+        storeId = user.store_id || (user.store && user.store.id) || null;
+        console.log("🏪 storeId obtido:", storeId);
+      } catch (error) {
+        console.error("❌ Erro ao parsear usuário:", error);
+      }
+    }
+
+    if (!storeId) {
+      console.error("❌ storeId não encontrado no localStorage");
+      toast({
+        title: "Erro",
+        description: "Loja não identificada. Por favor, faça login novamente.",
+        variant: "destructive",
+      });
+      return;
+    }
 
     const orderData = {
       store_id: storeId,
@@ -199,6 +221,7 @@ export function SupplierDetail() {
       })),
     };
 
+    console.log("📤 Enviando pedido:", orderData);
     createOrderMutation.mutate(orderData);
   };
 
@@ -342,9 +365,6 @@ export function SupplierDetail() {
           <TabsTrigger value="campaigns" data-testid="tab-campaigns">
             Campanhas
           </TabsTrigger>
-          <TabsTrigger value="files" data-testid="tab-files">
-            Arquivos
-          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="products" className="space-y-6">
@@ -390,40 +410,6 @@ export function SupplierDetail() {
               Nenhuma campanha ativa
             </p>
           )}
-        </TabsContent>
-        
-        <TabsContent value="files">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Arquivos Disponíveis</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {processedFiles.length > 0 ? (
-                <FileUploader
-                  files={processedFiles}
-                  isEditable={false}
-                  onDownload={(id) => {
-                    const file = files.find((f: any) => f.id.toString() === id);
-                    if (file) {
-                      filesApi.download(parseInt(id)).then((response) => {
-                        response.blob().then((blob) => {
-                          const url = window.URL.createObjectURL(blob);
-                          const a = document.createElement("a");
-                          a.href = url;
-                          a.download = file.description || `arquivo-${id}`;
-                          a.click();
-                        });
-                      });
-                    }
-                  }}
-                />
-              ) : (
-                <p className="text-center text-muted-foreground py-8">
-                  Nenhum arquivo disponível
-                </p>
-              )}
-            </CardContent>
-          </Card>
         </TabsContent>
       </Tabs>
       

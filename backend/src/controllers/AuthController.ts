@@ -3,6 +3,8 @@ import { AppDataSource } from "../config/ormconfig";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { User } from "../models/User";
+import { Supplier } from "../models/Supplier";
+import { Store } from "../models/Store";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -42,13 +44,71 @@ export class AuthController {
       user.last_login = new Date();
       await repo.save(user);
 
+      // Preparar dados de resposta
+      const responseUser: any = {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      };
+
+      console.log(`🔐 Login do usuário ${user.email} (role: ${user.role})`);
+
+      // Se for supplier, buscar o ID do fornecedor
+      if (user.role === "supplier") {
+        try {
+          console.log(`🔍 Procurando fornecedor para usuário ID ${user.id}`);
+          const supplierRepo = AppDataSource.getRepository(Supplier);
+          
+          // Tentar buscar por relação de usuário
+          let supplier = await supplierRepo.findOne({ 
+            where: { user: { id: user.id } }
+          });
+          
+          // Se não encontrar, tentar buscar diretamente por user_id na query
+          if (!supplier) {
+            console.log(`📝 Tentando busca alternativa com query direto ao banco...`);
+            const suppliers = await supplierRepo.find({ relations: ["user"] });
+            supplier = suppliers.find(s => s.user?.id === user.id);
+          }
+          
+          if (supplier) {
+            console.log(`✅ Fornecedor encontrado: ID ${supplier.id}`);
+            responseUser.supplier_id = supplier.id;
+          } else {
+            console.warn(`⚠️ Nenhum fornecedor encontrado para user_id ${user.id}`);
+            // Listar todos para debug
+            const allSuppliers = await supplierRepo.find({ relations: ["user"] });
+            console.log(`📋 Total de fornecedores no banco: ${allSuppliers.length}`);
+            if (allSuppliers.length > 0) {
+              console.log(`Primeira relação encontrada: user_id=${allSuppliers[0].user?.id}`);
+            }
+          }
+        } catch (err: any) {
+          console.error(`❌ Erro ao buscar fornecedor:`, err.message);
+        }
+      }
+
+      // Se for loja ou admin, buscar o ID da loja
+      if (user.role === "retailer" || user.role === "store" || user.role === "admin") {
+        try {
+          console.log(`🔍 Procurando loja para usuário ID ${user.id}`);
+          const storeRepo = AppDataSource.getRepository(Store);
+          const store = await storeRepo.findOne({ where: { user: { id: user.id } } });
+          
+          if (store) {
+            console.log(`✅ Loja encontrada: ID ${store.id}`);
+            responseUser.store_id = store.id;
+          } else {
+            console.warn(`⚠️ Nenhuma loja encontrada para user_id ${user.id}`);
+          }
+        } catch (err: any) {
+          console.error(`❌ Erro ao buscar loja:`, err);
+        }
+      }
+
       return res.json({
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role
-        },
+        user: responseUser,
         token
       });
     } catch (error: any) {

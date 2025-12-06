@@ -31,7 +31,7 @@ AppDataSource.initialize()
   });
 
 app.use("/api", routes);
-app.use(errorHandler);
+app.use(express.static(path.resolve(__dirname, "../public")));
 app.use("/uploads", express.static(path.resolve(__dirname, "../uploads")));
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.get("/", (req, res) => res.send("Central de Compras API Online"));

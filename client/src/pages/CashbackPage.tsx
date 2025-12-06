@@ -4,8 +4,6 @@ import { CashbackCard } from "@/components/CashbackCard";
 import { WithdrawModal } from "@/components/WithdrawModal";
 import { FileUploader } from "@/components/FileUploader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -16,7 +14,7 @@ import {
 } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Upload, Clock, CheckCircle2, XCircle } from "lucide-react";
-import { cashbackApi, withdrawalsApi, ordersApi } from "@/lib/api";
+import { cashbackApi, withdrawalsApi, ordersApi, storesApi } from "@/lib/api"; // Adicionado storesApi
 import { useToast } from "@/hooks/use-toast";
 
 const statusConfig: Record<string, { icon: typeof Clock; color: string; label: string }> = {
@@ -30,6 +28,25 @@ export function CashbackPage() {
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  // 1. Obter usuário logado
+  const userStr = localStorage.getItem("user");
+  const currentUser = userStr ? JSON.parse(userStr) : null;
+
+  // 2. Buscar a loja do usuário para obter o ID correto
+  const { data: stores = [] } = useQuery({
+    queryKey: ["stores"],
+    queryFn: () => storesApi.list(),
+    enabled: !!currentUser, // Só busca se tiver usuário
+  });
+
+  // Encontra a loja vinculada ao usuário atual
+  const myStore = useMemo(() => {
+    if (!currentUser || stores.length === 0) return null;
+    // Se a API já filtrar pelo usuário (comum em /stores), pega a primeira
+    // Caso retorne todas, filtramos pelo user_id
+    return stores.find((s: any) => s.user_id === currentUser.id) || stores[0];
+  }, [stores, currentUser]);
 
   // Buscar cashback
   const { data: cashbackEntries = [], isLoading: loadingCashback } = useQuery({
@@ -147,6 +164,40 @@ export function CashbackPage() {
         });
       });
     }
+  };
+
+  // Função para processar o saque
+  const handleWithdrawRequest = (data: { amount: number; pixKey: string }) => {
+    if (!myStore) {
+      toast({
+        title: "Erro",
+        description: "Não foi possível identificar sua loja. Tente recarregar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    withdrawalsApi.request({
+      store_id: myStore.id,
+      pix_key: data.pixKey,
+      amount: data.amount,
+    }).then(() => {
+      queryClient.invalidateQueries({ queryKey: ["withdrawals"] });
+      // Atualiza também o cashback para refletir o saldo reduzido imediatamente
+      queryClient.invalidateQueries({ queryKey: ["cashback"] });
+      
+      toast({
+        title: "Saque solicitado",
+        description: "Sua solicitação de saque foi enviada e está em análise.",
+      });
+      setShowWithdrawModal(false);
+    }).catch((error: any) => {
+      toast({
+        title: "Erro ao solicitar saque",
+        description: error.message || "Verifique se o valor não excede seu saldo disponível.",
+        variant: "destructive",
+      });
+    });
   };
 
   if (loadingCashback) {
@@ -294,32 +345,12 @@ export function CashbackPage() {
         </TabsContent>
       </Tabs>
 
+      {/* Correção aplicada aqui: prop alterada de onWithdraw para onConfirm */}
       <WithdrawModal
         open={showWithdrawModal}
         onOpenChange={setShowWithdrawModal}
         availableBalance={cashbackStats.confirmed}
-        onWithdraw={(data) => {
-          // TODO: Obter store_id do contexto
-          const storeId = 1;
-          withdrawalsApi.request({
-            store_id: storeId,
-            pix_key: data.pixKey,
-            amount: data.amount,
-          }).then(() => {
-            queryClient.invalidateQueries({ queryKey: ["withdrawals"] });
-            toast({
-              title: "Saque solicitado",
-              description: "Sua solicitação de saque foi enviada!",
-            });
-            setShowWithdrawModal(false);
-          }).catch((error: any) => {
-            toast({
-              title: "Erro ao solicitar saque",
-              description: error.message || "Tente novamente",
-              variant: "destructive",
-            });
-          });
-        }}
+        onConfirm={handleWithdrawRequest}
       />
     </div>
   );

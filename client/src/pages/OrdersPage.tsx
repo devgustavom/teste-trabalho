@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter"; // Importação adicionada
 import { OrderHistoryTable } from "@/components/OrderHistoryTable";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,13 +11,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Search, Filter, Plus, ShoppingCart } from "lucide-react";
-import { Link } from "wouter";
+import { Search, Filter, Plus } from "lucide-react";
 import { ordersApi } from "@/lib/api";
 
 export function OrdersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [, setLocation] = useLocation(); // Hook para navegação
   
   // Buscar pedidos
   const { data: orders = [], isLoading: loadingOrders } = useQuery({
@@ -65,12 +66,16 @@ export function OrdersPage() {
           <h1 className="text-2xl font-semibold mb-2">Meus Pedidos</h1>
           <p className="text-muted-foreground">Acompanhe o status dos seus pedidos</p>
         </div>
-        <Link href="/suppliers">
-          <Button className="gap-2" data-testid="button-new-order">
-            <Plus className="h-4 w-4" />
-            Novo Pedido
-          </Button>
-        </Link>
+        
+        {/* CORREÇÃO AQUI: Navegação via onClick em vez de Link envolvendo Button */}
+        <Button 
+          className="gap-2" 
+          data-testid="button-new-order"
+          onClick={() => setLocation("/suppliers")}
+        >
+          <Plus className="h-4 w-4" />
+          Novo Pedido
+        </Button>
       </div>
       
       <div className="flex flex-col md:flex-row gap-4">

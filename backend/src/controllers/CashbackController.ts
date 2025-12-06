@@ -46,33 +46,43 @@ export class CashbackController {
     try {
       const repo = AppDataSource.getRepository(CashbackEntry);
       const { id } = req.params;
+      
+      console.log(`📤 Upload de comprovante para cashback ID: ${id}`);
+      
       const cb = await repo.findOne({ 
         where: { id: Number(id) }, 
         relations: ["store", "store.user"] 
       });
       
       if (!cb) {
+        console.error(`❌ Cashback ID ${id} não encontrado`);
         return res.status(404).json({ message: "Cashback não encontrado" });
       }
       
       // Verifica se loja só pode fazer upload dos seus próprios cashbacks
       if (req.user!.role === 'store' || req.user!.role === 'retailer') {
         if (cb.store.user.id !== req.user!.id) {
+          console.error(`❌ Acesso negado: user ${req.user!.id} tentando acessar cashback de ${cb.store.user.id}`);
           return res.status(403).json({ message: 'Acesso negado' });
         }
       }
       
       if (!req.file) {
+        console.error(`❌ Nenhum arquivo enviado`);
         return res.status(400).json({ message: 'Arquivo não enviado' });
       }
+      
+      console.log(`✅ Arquivo recebido: ${req.file.filename}`);
       
       const file_url = `/uploads/${req.file.filename}`;
       cb.proof_file_url = file_url;
       await repo.save(cb);
       
+      console.log(`✅ Comprovante salvo: ${file_url}`);
+      
       return res.json(cb);
     } catch (error: any) {
-      console.error("Erro ao fazer upload de comprovante:", error);
+      console.error("❌ Erro ao fazer upload de comprovante:", error);
       return res.status(500).json({ message: error.message || "Erro interno do servidor" });
     }
   }
@@ -81,33 +91,41 @@ export class CashbackController {
     try {
       const repo = AppDataSource.getRepository(CashbackEntry);
       const { id } = req.params;
+      
+      console.log(`📥 Download de comprovante para cashback ID: ${id}`);
+      
       const cb = await repo.findOne({ 
         where: { id: Number(id) }, 
         relations: ["store", "store.user"] 
       });
       
       if (!cb) {
+        console.error(`❌ Cashback ID ${id} não encontrado`);
         return res.status(404).json({ message: "Cashback não encontrado" });
       }
       if (!cb.proof_file_url) {
+        console.error(`❌ Cashback ID ${id} não tem comprovante`);
         return res.status(404).json({ message: "Comprovante não encontrado" });
       }
       
       // Verifica permissões
       if (req.user!.role === 'store' || req.user!.role === 'retailer') {
         if (cb.store.user.id !== req.user!.id) {
+          console.error(`❌ Acesso negado: user ${req.user!.id} tentando acessar cashback de ${cb.store.user.id}`);
           return res.status(403).json({ message: 'Acesso negado' });
         }
       }
       
       const filePath = path.resolve(__dirname, '../../', cb.proof_file_url);
       if (!fs.existsSync(filePath)) {
+        console.error(`❌ Arquivo não encontrado: ${filePath}`);
         return res.status(404).json({ message: "Arquivo não encontrado no servidor" });
       }
       
+      console.log(`✅ Download iniciado: ${filePath}`);
       return res.download(filePath);
     } catch (error: any) {
-      console.error("Erro ao baixar comprovante:", error);
+      console.error("❌ Erro ao fazer download de comprovante:", error);
       return res.status(500).json({ message: error.message || "Erro interno do servidor" });
     }
   }

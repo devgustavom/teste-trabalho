@@ -68,7 +68,6 @@ export function RetailerHome() {
   const processedSuppliers = useMemo(() => {
     return suppliers.map((supplier: any) => {
       const supplierCampaigns = campaigns.filter((c: any) => c.supplier?.id === supplier.id);
-      const supplierFiles = []; // Seria buscado separadamente se necessário
       
       return {
         id: supplier.id.toString(),
@@ -77,7 +76,6 @@ export function RetailerHome() {
         contactPhone: supplier.contact_phone,
         whatsappNumber: supplier.whatsapp_link?.replace("https://wa.me/", "") || supplier.contact_phone,
         activeCampaigns: supplierCampaigns.length,
-        hasFiles: supplierFiles.length > 0,
       };
     });
   }, [suppliers, campaigns]);

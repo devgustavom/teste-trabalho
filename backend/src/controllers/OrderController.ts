@@ -28,10 +28,15 @@ export class OrderController {
 
       const { store_id, supplier_id, campaign_id, payment_type, is_budget, notes, items } = req.body;
       
+      console.log("📤 POST /orders - Dados recebidos:", { store_id, supplier_id, campaign_id, items_count: items?.length });
+      
       if (!store_id || !supplier_id || !items || items.length === 0) {
+        console.error("❌ Dados obrigatórios faltando:", { store_id, supplier_id, items_length: items?.length });
         return res.status(400).json({ message: "Dados obrigatórios não preenchidos" });
       }
 
+      console.log(`🔍 Buscando store_id=${store_id} e supplier_id=${supplier_id}`);
+      
       const store = await storeRepo.findOne({ 
         where: { id: store_id }, 
         relations: ["user"] 
@@ -44,9 +49,14 @@ export class OrderController {
         where: { id: campaign_id } 
       }) : null;
       
+      console.log(`📋 Resultados da busca - Store: ${store ? "✅ encontrada" : "❌ não encontrada"}, Supplier: ${supplier ? "✅ encontrado" : "❌ não encontrado"}`);
+      
       if (!store || !supplier) {
+        console.error(`❌ Falha na validação: store=${!store ? "não encontrada" : "ok"}, supplier=${!supplier ? "não encontrado" : "ok"}`);
         return res.status(400).json({ message: "Loja ou fornecedor inválido" });
       }
+
+      console.log(`✅ Validação passou: ${store.name} x ${supplier.legal_name}`);
 
       // Validações de campanha
       if (campaign) {

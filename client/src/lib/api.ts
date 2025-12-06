@@ -189,40 +189,6 @@ export const cashbackApi = {
   },
 };
 
-// Files
-export const filesApi = {
-  list: (supplierId?: number) => {
-    const url = supplierId ? `/files?supplier_id=${supplierId}` : "/files";
-    return apiRequest<any[]>(url);
-  },
-  download: (id: number) => {
-    const token = getAuthToken();
-    return fetch(`${API_BASE_URL}/files/${id}/download`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-    });
-  },
-  upload: (supplierId: number, file: File, description?: string, fileType?: string) => {
-    const formData = new FormData();
-    formData.append("file", file);
-    formData.append("supplier_id", supplierId.toString());
-    if (description) formData.append("description", description);
-    if (fileType) formData.append("file_type", fileType);
-    const token = getAuthToken();
-    return fetch(`${API_BASE_URL}/files`, {
-      method: "POST",
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
-      body: formData,
-    }).then((res) => {
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return res.json();
-    });
-  },
-  delete: (id: number) =>
-    apiRequest<void>(`/files/${id}`, {
-      method: "DELETE",
-    }),
-};
-
 // Categories
 export const categoriesApi = {
   list: () => apiRequest<any[]>("/categories"),

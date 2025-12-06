@@ -11,7 +11,6 @@ export default function SupplierCardExample() {
         contactPhone="11999999999"
         whatsappNumber="5511999999999"
         activeCampaigns={2}
-        hasFiles={true}
         onClick={() => console.log("Supplier clicked")}
       />
       <SupplierCard
@@ -21,7 +20,6 @@ export default function SupplierCardExample() {
         contactPhone="11988888888"
         whatsappNumber="5511988888888"
         activeCampaigns={1}
-        hasFiles={false}
         onClick={() => console.log("Supplier clicked")}
       />
       <SupplierCard
@@ -29,7 +27,6 @@ export default function SupplierCardExample() {
         name="Alimentos Premium"
         category="Alimentos"
         activeCampaigns={0}
-        hasFiles={true}
         onClick={() => console.log("Supplier clicked")}
       />
       <SupplierCard
@@ -38,7 +35,6 @@ export default function SupplierCardExample() {
         category="Eletronicos"
         whatsappNumber="5511977777777"
         activeCampaigns={3}
-        hasFiles={true}
         onClick={() => console.log("Supplier clicked")}
       />
     </div>

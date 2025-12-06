@@ -63,7 +63,7 @@ const router = Router();
  *         description: Dados inválidos
  */
 router.use(authenticateJWT);
-router.post("/", authorizeRoles("store", "retailer"), wrapAsync(OrderController.create));
+router.post("/", authorizeRoles("admin", "store", "retailer"), wrapAsync(OrderController.create));
 
 /**
  * @swagger

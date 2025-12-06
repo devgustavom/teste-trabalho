@@ -31,7 +31,6 @@ import {
   Users,
   Building2,
   Target,
-  FileText,
   Settings,
   LogOut,
   Wallet,
@@ -60,7 +59,6 @@ const navItems: NavItem[] = [
   { title: "Pedidos", icon: ShoppingCart, href: "/orders", roles: ["admin"] },
   { title: "Lojas", icon: Users, href: "/stores", roles: ["admin", "telesales"] },
   { title: "Cashback", icon: Wallet, href: "/cashback", roles: ["retailer"] },
-  { title: "Arquivos", icon: FileText, href: "/files", roles: ["supplier"] },
   { title: "Relatorios", icon: BarChart3, href: "/reports", roles: ["admin", "supplier"] },
   { title: "Configuracoes", icon: Settings, href: "/settings", roles: ["admin", "supplier", "retailer"] },
 ];

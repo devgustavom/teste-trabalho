@@ -13,18 +13,32 @@ export class ProductController {
       const categoryRepo = AppDataSource.getRepository(Category);
       const { supplier_id, category_id, name, description, price, stock, image_url } = req.body;
       
+      console.log("📦 Criando produto com dados:", { supplier_id, category_id, name, price });
+      
       if (!supplier_id || !category_id || !name || price === undefined) {
-        return res.status(400).json({ message: "Dados obrigatórios não preenchidos" });
+        console.error("❌ Validação falhou:", { supplier_id, category_id, name, price });
+        return res.status(400).json({ message: "Dados obrigatórios não preenchidos: fornecedor, categoria, nome e preço são obrigatórios" });
       }
 
+      console.log("🔍 Procurando fornecedor com ID:", supplier_id);
       const supplier = await supplierRepo.findOne({ 
-        where: { id: supplier_id },
+        where: { id: Number(supplier_id) },
         relations: ["user"]
       });
-      const category = await categoryRepo.findOne({ where: { id: category_id } });
+      console.log("✓ Fornecedor encontrado:", supplier ? supplier.id : "NÃO ENCONTRADO");
       
-      if (!supplier || !category) {
-        return res.status(400).json({ message: "Fornecedor/categoria inválidos" });
+      console.log("🔍 Procurando categoria com ID:", category_id);
+      const category = await categoryRepo.findOne({ where: { id: Number(category_id) } });
+      console.log("✓ Categoria encontrada:", category ? category.id : "NÃO ENCONTRADA");
+      
+      if (!supplier) {
+        console.error("❌ Fornecedor não encontrado:", supplier_id);
+        return res.status(400).json({ message: `Fornecedor com ID ${supplier_id} não encontrado` });
+      }
+      
+      if (!category) {
+        console.error("❌ Categoria não encontrada:", category_id);
+        return res.status(400).json({ message: `Categoria com ID ${category_id} não encontrada` });
       }
       
       // Fornecedor só pode criar para si; admin pode tudo
@@ -110,10 +124,16 @@ export class ProductController {
       if (price !== undefined) product.price = Number(price);
       if (stock !== undefined) product.stock = Number(stock);
       if (image_url !== undefined) product.image_url = image_url;
+      
+      // Atualizar categoria com validação
       if (category_id) {
-        const category = await categoryRepo.findOne({ where: { id: category_id } });
-        if (category) product.category = category;
+        const category = await categoryRepo.findOne({ where: { id: Number(category_id) } });
+        if (!category) {
+          return res.status(400).json({ message: "Categoria inválida ou não encontrada" });
+        }
+        product.category = category;
       }
+      
       await repo.save(product);
       return res.json(product);
     } catch (error: any) {
