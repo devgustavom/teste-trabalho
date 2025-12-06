@@ -1,0 +1,206 @@
+I want you to develop the complete system for a platform called Central de Compras, including backend, frontend, database, APIs, screens, components, business logic, campaign rules, order flow, cashback flow, and the admin panel. Below is the full description of the system, including all information that was in the original PDFs.
+Create the entire project based only on this text.
+
+The platform must connect retailers and suppliers inside a “purchasing hub,” allowing suppliers to provide products and campaigns, and stores to place orders in a simple and clear way. The system must prioritize usability, as many users have low technological familiarity.
+
+The system has 3 main profiles:
+
+Central Administrator
+
+Retailer (store using the system)
+
+Supplier
+
+And an optional fourth profile: Telesales.
+
+The Administrator can:
+
+– Register stores with full address, manager, and login credentials.
+– Register suppliers with company data, contacts, commercial policy, and credentials.
+– Register products, associating them with suppliers and categories.
+– Automatically generate username and password for stores, suppliers, and telesales.
+– View orders created by stores.
+– Access reports of orders, revenue, and cashback.
+
+The Supplier can:
+
+– Log in with automatically supplied credentials.
+– Create and edit products (name, description, price, stock, category, and images).
+– Create promotional campaigns, which may include:
+• specific duration (start and end dates),
+• minimum order value,
+• campaigns with general goal (all orders are only validated if the total campaign amount reaches the goal),
+• campaigns without goals (validated individually).
+– Register specific commercial conditions by state (UF), including:
+• cashback percentage,
+• payment terms,
+• unit increase or discount per product.
+
+These conditions must be applied automatically when the store places an order.
+
+– Receive orders and mark them as separated, shipped, or delivered.
+– Upload PDF files, images, or spreadsheets that the store can download (e.g., policies, charts, agreements, etc.).
+– Display campaign banners for each supplier.
+
+The Retailer (Store) can:
+
+– Log in with provided credentials.
+– See featured campaigns on the home screen, with clickable banners leading directly to the campaign’s product page.
+– See a list of suppliers organized by category.
+– Upon clicking a supplier, open a page with:
+• commercial policy,
+• representative contacts,
+• WhatsApp link,
+• downloads of files uploaded by the supplier,
+• banners of that supplier’s campaigns.
+
+– Place orders to suppliers through a simple “ecommerce-style” order page.
+– See product images enlarged on hover or in a pop-up.
+– View a totalizer at the bottom of the page.
+– Add information before submitting the order:
+• “Cash payment”,
+• “Consider as budget only”,
+• notes field (pending issues, missing products, delivery instructions, etc.).
+
+– Receive a copy of the order by email, as well as the supplier and central admin.
+– View order history and status (separated, shipped, etc.).
+
+Campaign Flow
+
+There are two types:
+
+Campaigns with overall goal
+
+All orders placed during the campaign are only validated if the sum of all orders reaches the defined target.
+If the goal is not reached, all orders are disregarded.
+
+Campaigns without goal
+
+Each order is validated individually, as long as the store meets the minimum order value or other rules.
+
+Campaigns are important and must appear prominently on the home screen.
+
+Cashback
+
+For every purchase, the store receives a cashback percentage defined by the supplier.
+This percentage may vary by state.
+
+Cashback is calculated over the total amount excluding taxes.
+
+If there is no automatic SEFAZ integration, the store may upload:
+– the invoice DANFE
+– a picture of the budget (when there is no invoice)
+
+The supplier must send a monthly billing report for verification.
+
+The retailer must have an area to request withdrawal, providing:
+– PIX key
+– required data
+
+The amount can only be withdrawn once confirmed.
+
+Conditions by State (UF)
+
+The supplier can register different conditions per state, such as:
+– cashback percentage
+– payment terms
+– unit increase or discount
+
+Expected behavior:
+When a store places an order, the system must automatically identify the store’s state and apply the corresponding supplier conditions.
+
+Ecommerce Area
+
+This is the most sensitive part of the system and must be simple, clear, and objective.
+
+The store selects products from a supplier, chooses quantities, and submits the order.
+
+Important items:
+– image zoom on hover or pop-up;
+– totalizer in the footer;
+– fields before finalizing the order (notes, payment, etc.);
+– email copy sent automatically.
+
+Files and Downloads
+
+The supplier may upload:
+
+– PDFs
+– spreadsheets
+– images
+
+The store must be able to download these files easily.
+
+Backend
+
+Create a complete backend with:
+
+– JWT authentication
+– role-based authorization middleware (admin, supplier, store)
+– CRUD for users, suppliers, stores, products, campaigns, regional conditions, orders, and cashback
+– automatic email sending when an order is created
+– upload and download of files (PDF, image, etc.)
+– campaign goal validation
+– automatic cashback calculation
+– automatic application of regional conditions
+– REST API with documented endpoints
+– clean architecture (controllers, services, models, repository, etc.)
+
+Frontend
+
+Create a complete application with:
+
+– login screen
+– admin dashboard
+– supplier dashboard
+– retailer dashboard
+– supplier list and details
+– campaign list and details
+– ecommerce order screen
+– order submission screen
+– order history and status
+– cashback area
+– withdrawal request via PIX
+– administrative area for registrations
+– full responsiveness
+– image zoom
+– clickable banners
+– simple, clean forms
+
+Database
+
+Create the full modeling and SQL scripts with tables:
+
+– users
+– stores
+– suppliers
+– products
+– categories
+– campaigns
+– campaign_products
+– state_conditions
+– orders
+– order_items
+– cashback_entries
+– files
+
+All with PKs, FKs, timestamps, and appropriate types.
+
+Complete Delivery
+
+I want you to generate:
+
+– full backend code
+– full frontend code
+– SQL scripts
+– API documentation
+– project structure
+– detailed logic for campaigns, orders, and cashback
+– full flow between profiles
+– explanatory comments
+– request and response examples
+– everything ready to run
+
+Do this as a real, professional, complete system using all the information above.
+
+If you'd like, I can now also turn this into a single prompt for another AI exactly as you prefer.
